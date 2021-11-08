@@ -1,0 +1,56 @@
+---
+title: "index"
+author: "Desik Somasundaram"
+date: "11/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# get libraries
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+librarian::shelf(
+  clockify, dplyr, DT, glue, lubridate, readr)
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r api}
+
+# CHANGE THESE VARIABLES!
+api_txt <- "../private/apikey.txt"
+project_name <- "nex_dcp30_intro"
+
+# use API key to authenticate
+CLOCKIFY_API_KEY <- readLines(api_txt)
+set_api_key(CLOCKIFY_API_KEY)
+
+# get data
+d_projects <- projects() %>% 
+      select(project_id, project_name)
+d_users <- users() %>% 
+      select(user_id, user_name)
+d_times <- time_entries(concise = F) %>% 
+  left_join(
+    d_projects, by = "project_id") %>% 
+  left_join(
+    d_users, by = "user_id")
+
+# show table
+d_times %>% 
+  select(
+    user_name, project_name, 
+    time_start, duration, description) %>% 
+  arrange(user_name, project_name, time_start) %>% 
+  datatable() %>%
+  formatRound(columns=c('duration'), digits=3)
+```
+
